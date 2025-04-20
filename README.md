@@ -23,16 +23,7 @@ This package provides reusable core components for the Power Words application, 
 
 *   [RevenueCat/purchases-ios](https://github.com/RevenueCat/purchases-ios) (v4.0.0+)
 
-## Why Use `DebugLogger` Instead of `print()`?
-
-While `print()` is simple for quick debugging, `DebugLogger` (built on Apple's `OSLog`) offers significant advantages for building robust, maintainable applications:
-
-*   **Structured Levels:** Log messages have levels (`debug`, `info`, `warning`, `error`). You can filter logs by severity in Console.app to focus on critical issues.
-*   **Categorization:** Logs are grouped by subsystem (your app) and category (e.g., `Network`, `Onboarding`, `UI`). This allows you to easily isolate logs from specific features.
-*   **Performance:** `OSLog` is highly performant. Messages for log levels or categories that are disabled have negligible overhead, making it safe to leave detailed logs in your code, even in release builds (if desired levels are disabled). `print()` statements have more overhead.
-*   **System Console Integration:** Logs appear in the standard macOS `Console.app`. This allows you to view and filter logs from your app (and the system) on connected devices *without* needing Xcode attached. Essential for diagnosing issues in TestFlight builds or when debugging complex interactions.
-*   **Configuration:** Log levels can be controlled dynamically (e.g., via environment variables or configuration profiles, though our current `DebugLogger` uses a static set). This allows enabling more verbose logging for specific debugging sessions without recompiling.
-*   **Context:** Automatically includes useful metadata like timestamps and thread IDs (managed by the system logger). Our implementation also adds file/function/line.
+---
 
 ## Usage Examples
 
@@ -75,6 +66,18 @@ enum MyError: Error { case someError }
 // Disable function tracing globally:
 // DebugLogger.isTracingEnabled = false
 ```
+
+### Why Use `DebugLogger` Instead of `print()`?
+
+While `print()` is simple for quick debugging, `DebugLogger` (built on Apple's `OSLog`) offers significant advantages for building robust, maintainable applications:
+
+*   **Structured Levels:** Log messages have levels (`debug`, `info`, `warning`, `error`). You can filter logs by severity in Console.app to focus on critical issues.
+*   **Categorization:** Logs are grouped by subsystem (your app) and category (e.g., `Network`, `Onboarding`, `UI`). This allows you to easily isolate logs from specific features.
+*   **Performance:** `OSLog` is highly performant. Messages for log levels or categories that are disabled have negligible overhead, making it safe to leave detailed logs in your code, even in release builds (if desired levels are disabled). `print()` statements have more overhead.
+*   **System Console Integration:** Logs appear in the standard macOS `Console.app`. This allows you to view and filter logs from your app (and the system) on connected devices *without* needing Xcode attached. Essential for diagnosing issues in TestFlight builds or when debugging complex interactions.
+*   **Configuration:** Log levels can be controlled dynamically (e.g., via environment variables or configuration profiles, though our current `DebugLogger` uses a static set). This allows enabling more verbose logging for specific debugging sessions without recompiling.
+*   **Context:** Automatically includes useful metadata like timestamps and thread IDs (managed by the system logger). Our implementation also adds file/function/line.
+
 
 ---
 
