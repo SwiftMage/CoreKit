@@ -1,6 +1,6 @@
 # CoreKit Swift Package
 
-This package provides reusable core components for the Power Words application, including onboarding, settings UI, notification management, review prompts, and RevenueCat integration.
+This package provides reusable core components for the ios applications, including onboarding, settings UI, notification management, review prompts, and RevenueCat integration.
 
 ## Modules
 
