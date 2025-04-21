@@ -107,6 +107,7 @@ struct ContentView: View {
     // State for Notification Manager Demo
     @State private var notificationAuthStatus: UNAuthorizationStatus = .notDetermined
     private let demoNotificationId = "coreKitDemoNotification"
+    @State private var enableCloudKitDemo: Bool = false // Add state for CloudKit toggle
 
     var body: some View {
         NavigationView {
@@ -262,6 +263,31 @@ struct ContentView: View {
              Button("Cancel Demo Notification") {
                   cancelDemoNotification()
              }
+             
+             Divider()
+             
+             // CloudKit Push Demo Section
+             Toggle("Enable CloudKit Push Demo", isOn: $enableCloudKitDemo)
+                 .tint(.orange)
+             
+             // Add Text explaining requirements if toggle is on
+             if enableCloudKitDemo {
+                 Text("Requires manual setup: Enable Push & CloudKit capabilities, implement AppDelegate methods (call NotificationService helpers), create CKSubscription.")
+                     .font(.caption2)
+                     .foregroundColor(.gray)
+                 
+                 Button("Register for Remote Notifications") {
+                     // Called after permission granted & toggle enabled
+                     NotificationService.shared.registerForRemoteNotifications()
+                 }
+                 .disabled(notificationAuthStatus != .authorized)
+                 
+                 Button("Create CKSubscription (Placeholder)") {
+                     // App-specific logic to create and save a CKQuerySubscription
+                     DebugLogger.notification("Placeholder: Create CKSubscription button tapped.", level: .warning)
+                 }
+                 .disabled(notificationAuthStatus != .authorized)
+             }
         }
     }
     
@@ -382,6 +408,16 @@ struct ContentView: View {
              } else {
                  // Update status after request
                  checkNotificationStatus()
+                 
+                 // If granted and CloudKit demo enabled, register for remote
+                 if granted && enableCloudKitDemo {
+                      DebugLogger.notification("Permission granted and CloudKit demo enabled. Requesting remote registration.", level: .info)
+                      #if canImport(UIKit) && !os(watchOS) && !os(tvOS)
+                      NotificationService.shared.registerForRemoteNotifications()
+                      #else
+                      DebugLogger.notification("Cannot call registerForRemoteNotifications on this platform.", level: .warning)
+                      #endif
+                 }
              }
         }
     }

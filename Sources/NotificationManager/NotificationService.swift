@@ -90,20 +90,69 @@ public class NotificationService: NSObject, UNUserNotificationCenterDelegate {
         completionHandler()
     }
     
-    // MARK: - Remote Notifications (Placeholder - App Specific)
-    /*
-    These methods typically belong in the AppDelegate or equivalent app lifecycle manager,
-    as they handle app-level events related to push registration.
-    CoreKit can provide helpers, but shouldn't directly handle these callbacks.
+    // MARK: - Remote Notifications Helpers (Optional)
     
-    // Example helper if CoreKit managed token formatting:
-    public func formatDeviceToken(_ deviceToken: Data) -> String {
-        let tokenParts = deviceToken.map { data in String(format: "%02.2hhx", data) }
-        let token = tokenParts.joined()
-        print("Formatted Device Token: \(token)")
-        return token
+    #if canImport(UIKit) && !os(watchOS) && !os(tvOS)
+    // Only available on platforms with UIApplication
+    
+    /// Requests registration for remote notifications with APNS.
+    /// Call this after obtaining user authorization.
+    /// Requires the app to have the Push Notifications capability enabled.
+    public func registerForRemoteNotifications() {
+        DispatchQueue.main.async {
+            DebugLogger.notification("Attempting to register for remote notifications with APNS.", level: .info)
+            UIApplication.shared.registerForRemoteNotifications()
+        }
     }
-    */
+    
+    /// Handles successful registration for remote notifications.
+    /// Call this from your `application(_:didRegisterForRemoteNotificationsWithDeviceToken:)` delegate method.
+    /// - Parameter deviceToken: The device token data received from APNS.
+    public func handleRemoteNotificationRegistration(didRegister deviceToken: Data) {
+        let tokenParts = deviceToken.map { data in String(format: "%02.2hhx", data) }
+        let tokenString = tokenParts.joined()
+        DebugLogger.notification("Successfully registered for remote notifications. Device Token: \(tokenString)", level: .info)
+        // TODO: Send token to your server or handle as needed (e.g., for non-CloudKit providers)
+    }
+    
+    /// Handles failed registration for remote notifications.
+    /// Call this from your `application(_:didFailToRegisterForRemoteNotificationsWithError:)` delegate method.
+    /// - Parameter error: The error received.
+    public func handleRemoteNotificationRegistration(didFail error: Error) {
+        DebugLogger.notification("Failed to register for remote notifications: \(error.localizedDescription)", level: .error)
+    }
+    
+    /// Handles an incoming remote notification payload.
+    /// Call this from your `application(_:didReceiveRemoteNotification:fetchCompletionHandler:)` delegate method.
+    /// - Parameters:
+    ///   - userInfo: The notification payload dictionary.
+    ///   - fetchCompletionHandler: The completion handler to call when processing is done.
+    public func handleRemoteNotification(_ userInfo: [AnyHashable: Any], fetchCompletionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
+        DebugLogger.notification("Received remote notification payload: \(userInfo)", level: .debug)
+        
+        #if canImport(CloudKit)
+        // Attempt to parse as a CloudKit notification
+        if let ckNotification = CKNotification(fromRemoteNotificationDictionary: userInfo) {
+            DebugLogger.notification("Parsed as CloudKit notification. Type: \(ckNotification.notificationType.rawValue)", level: .info)
+            if let queryNotification = ckNotification as? CKQueryNotification {
+                DebugLogger.notification("CloudKit Query Notification Details: ID=\(queryNotification.notificationID?.description ?? "N/A"), Reason=\(queryNotification.queryNotificationReason.rawValue), RecordID=\(queryNotification.recordID?.recordName ?? "N/A")", level: .debug)
+                // App should handle fetching data based on this notification
+            }
+            // Handle other CKNotification types (database, record zone) if needed
+        } else {
+             DebugLogger.notification("Payload is not a standard CloudKit notification.", level: .debug)
+        }
+        #else
+        DebugLogger.notification("CloudKit framework not available for parsing CKNotification.", level: .info)
+        #endif
+        
+        // App must perform actual data fetching and UI updates.
+        // Call completion handler appropriately based on whether new data was fetched.
+        // For now, we assume no data was fetched by this helper.
+        fetchCompletionHandler(.noData)
+    }
+    
+    #endif // canImport(UIKit)
 }
 
 // Removed UIKit import 
