@@ -13,6 +13,17 @@ This package provides reusable core components for the ios applications, includi
 *   **RevenueCatManager:** Provides a manager class (`RevenueCatManager`) to interact with the RevenueCat SDK for fetching offerings, making purchases, and checking subscription status.
 *   **UserProfile:** (Placeholder) Intended for managing user profile data (persistence likely handled by the main app).
 
+## ParentalGate
+
+Provides a reusable parental gate mechanism using a simple math problem to restrict access to certain features (e.g., external links, purchases, settings). Includes `ParentalGateManager` (an `ObservableObject` singleton) to manage gate presentation and logic, and `ParentalGateView` for the UI, typically presented as a sheet. Also includes `ParentalGateLink`, a `View` similar to SwiftUI's `Link` that automatically presents the gate before navigating to a URL.
+
+**Usage:**
+
+1.  Inject or access `ParentalGateManager.shared`.
+2.  Call methods like `requireParentalApprovalForLink`, `requireParentalApprovalForPurchase`, etc., providing completion handlers for success and cancellation.
+3.  Ensure a `.sheet(isPresented: $parentalGateManager.showParentalGate) { ParentalGateView() }` modifier is attached high up in your view hierarchy (e.g., on your root view or `ContentView`).
+4.  Use `ParentalGateLink(destination: url) { ... }` for guarded URL navigation.
+
 ## Requirements
 
 *   iOS 15.0+

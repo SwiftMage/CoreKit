@@ -75,7 +75,7 @@ struct RevenueCatManagerTests {
                 expectation.fulfill(isLoading)
             }
             .store(in: &cancellables)
-        
+            
         // Start fetching (we don't mock the network call here)
         await manager.fetchOfferings()
         
@@ -106,7 +106,7 @@ struct RevenueCatManagerTests {
         
         tearDown()
     }
-    
+
     @Test("Update Subscription Status - Inactive")
     mutating func testUpdateSubscriptionStatusInactive() {
         setUp()

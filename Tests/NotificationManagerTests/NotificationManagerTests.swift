@@ -101,7 +101,7 @@ struct NotificationManagerTests {
         // Similar to above, mainly checks if the call completes.
         let expectation = Expectation<UNAuthorizationStatus>()
 
-        notificationService.checkAuthorizationStatus { status in
+             notificationService.checkAuthorizationStatus { status in
             print("Test: checkAuthorizationStatus completed with status: \(status)")
             expectation.fulfill(status)
         }
@@ -109,7 +109,7 @@ struct NotificationManagerTests {
         try await Task.sleep(nanoseconds: 1_000_000_000) // Wait 1 second
         // Cannot reliably check fulfillment yet.
     }
-    
+
     @Test("Schedule Local Notification - Call Executes")
     func testScheduleLocalNotificationCalled() {
         // This test only checks if the add request is called without crashing.
@@ -152,8 +152,8 @@ struct NotificationManagerTests {
     
     // TODO: Add tests for delegate methods if NotificationService exposes ways to inject mock notifications/responses.
     // TODO: Implement mocking for UNUserNotificationCenter for more robust testing.
-}
-
+    }
+    
 // Helper for async expectations if Swift Testing adds support
 actor Expectation<T> {
     private var value: T? = nil

@@ -67,7 +67,7 @@ struct DebugToolsTests {
 
         restoreOriginalSettings()
     }
-    
+
     @Test("Convenience Functions Call Internal Log") func testConvenienceFunctions() {
         // This is difficult to test without mocking OSLog or capturing output.
         // We are essentially trusting that the convenience funcs call _log.

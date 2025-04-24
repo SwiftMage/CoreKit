@@ -17,7 +17,8 @@ let package = Package(
             "Settings",
             "RevenueCatManager",
             "DebugTools",
-            "ThemeManager" // Renamed from Utilities
+            "ThemeManager", // Renamed from Utilities
+            "ParentalGate" // <-- Added new target
         ])
     ],
     dependencies: [
@@ -41,6 +42,13 @@ let package = Package(
         .target(name: "DebugTools", dependencies: ["ThemeManager"], path: "Sources/DebugTools"), 
         // Rename Utilities target to ThemeManager and update path
         .target(name: "ThemeManager", path: "Sources/ThemeManager"), 
+        
+        // --- NEW ParentalGate Target --- 
+        .target(name: "ParentalGate", 
+                dependencies: [], // SwiftUI/UIKit are implicit on iOS
+                path: "Sources/ParentalGate"),
+        // --- End ParentalGate Target --- 
+
         // Add other targets for future modules (Analytics, Localization, Networking, Permissions, UIComponents, AppVersion)
 
 //        // --- Demo Application Target ---
