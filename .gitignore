@@ -1,1 +1,55 @@
 .build/
+# Xcode generated files
+*.xcuserstate          # User-specific Xcode state
+*.xcworkspace          # Xcode workspace (for CocoaPods, Carthage, etc.)
+*.xcodeproj/           # Xcode project (project-specific files)
+*.xcbkptlist           # Breakpoints file 
+xcuserdata/            # User-specific data and settings
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
+*.perspectivev3
+!default.perspectivev3
+xcuserdata
+*.xccheckout
+profile
+*.moved-aside
+DerivedData
+*.hmap
+*.ipa
+
+
+
+# User-specific configuration files
+*.xcuserstate          # User-specific configuration files
+
+# Build files
+build/                 # Build directory
+DerivedData/           # Derived data (local build artifacts)
+
+# Dependencies (CocoaPods, Carthage, etc.)
+Pods/                  # CocoaPods dependencies
+Cartfile.resolved      # Carthage resolved dependencies
+Carthage/              # Carthage build directory
+
+# Swift Package Manager
+.swiftpm/              # SwiftPM build artifacts
+Package.pins           # Package Manager pins
+Package.resolved       # Package Manager resolution file
+
+# Other files that can be generated
+*.hmap                 # Header map
+*.ipa                  # iOS app archive (IPA)
+*.dSYM                 # Debug symbols (dSYM)
+*.app                  # Application binary
+
+# Assets files (optional: ignore only if not needed in version control)
+# If you want to track Assets.xcassets, remove or comment this line.
+# SelfTalkForKids/Assets.xcassets/
+
+# Temporary files
+.DS_Store              # macOS system files (Finder attributes)
+Thumbs.db              # Windows thumbnail cache
