@@ -38,7 +38,7 @@ private class MockUserDefaults: UserDefaults {
 // directly, making true unit testing difficult without refactoring for dependency injection.
 // These tests demonstrate the *intent* but may need adjustments based on future refactoring.
 
-@available(iOS 15.0, *) // Match platform availability if needed
+@available(iOS 15.0, macOS 11.0, *)
 struct ReviewRequestManagerTests {
 
     // Keys used internally by ReviewRequestManager (assuming they are accessible or known)
