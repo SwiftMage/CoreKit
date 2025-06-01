@@ -8,18 +8,23 @@ let package = Package(
         .macOS(.v11)
     ],
     products: [
-        // Update product list to reflect renamed target
-        .library(name: "CoreKit", targets: [ 
-            "Onboarding",
-            "ReviewManager", 
-            "NotificationManager",
-            "UserProfile",
-            "Settings",
-            "RevenueCatManager",
-            "DebugTools",
-            "ThemeManager", // Renamed from Utilities
-            "ParentalGate" // <-- Added new target
-        ])
+        .library(
+            name: "CoreKit",
+            targets: [
+                "Onboarding",
+                "ReviewManager",
+                "NotificationManager",
+                "UserProfile",
+                "Settings",
+                "DebugTools",
+                "ThemeManager",
+                "ParentalGate"
+            ]
+        ),
+        .library(
+            name: "CoreKitRevenue",
+            targets: ["RevenueCatManager"]
+        )
     ],
     dependencies: [
         // Update RevenueCat dependency to match root project (>= 5.21.2)
@@ -28,26 +33,26 @@ let package = Package(
     targets: [
         // Update dependencies from "Utilities" to "ThemeManager"
         .target(name: "Onboarding", dependencies: ["ThemeManager", "DebugTools"], path: "Sources/Onboarding"),
-        .target(name: "ReviewManager", dependencies: ["ThemeManager", "DebugTools"], path: "Sources/ReviewManager"), 
+        .target(name: "ReviewManager", dependencies: ["ThemeManager", "DebugTools"], path: "Sources/ReviewManager"),
         .target(name: "NotificationManager", dependencies: ["ThemeManager", "DebugTools"], path: "Sources/NotificationManager"),
         .target(name: "UserProfile", dependencies: ["ThemeManager", "DebugTools"], path: "Sources/UserProfile"),
         .target(name: "Settings", dependencies: ["ThemeManager", "DebugTools"], path: "Sources/Settings"),
-        .target(name: "RevenueCatManager", 
+        .target(name: "RevenueCatManager",
                 dependencies: [
-                    "ThemeManager", 
+                    "ThemeManager",
                     "DebugTools",
                     .product(name: "RevenueCat", package: "purchases-ios")
                 ],
                 path: "Sources/RevenueCatManager"),
-        .target(name: "DebugTools", dependencies: ["ThemeManager"], path: "Sources/DebugTools"), 
+        .target(name: "DebugTools", dependencies: ["ThemeManager"], path: "Sources/DebugTools"),
         // Rename Utilities target to ThemeManager and update path
-        .target(name: "ThemeManager", path: "Sources/ThemeManager"), 
+        .target(name: "ThemeManager", path: "Sources/ThemeManager"),
         
-        // --- NEW ParentalGate Target --- 
-        .target(name: "ParentalGate", 
+        // --- NEW ParentalGate Target ---
+        .target(name: "ParentalGate",
                 dependencies: [], // SwiftUI/UIKit are implicit on iOS
                 path: "Sources/ParentalGate"),
-        // --- End ParentalGate Target --- 
+        // --- End ParentalGate Target ---
 
         // Add other targets for future modules (Analytics, Localization, Networking, Permissions, UIComponents, AppVersion)
 
@@ -57,13 +62,13 @@ let package = Package(
 //            dependencies: [
 //                // Update dependency from "Utilities" to "ThemeManager"
 //                "Onboarding",
-//                "ReviewManager", 
+//                "ReviewManager",
 //                "NotificationManager",
 //                "UserProfile",
 //                "Settings",
 //                "RevenueCatManager",
 //                "DebugTools",
-//                "ThemeManager" 
+//                "ThemeManager"
 //            ],
 //            path: "Examples/DemoApp/Sources", // Point to the DemoApp sources
 //            resources: [
@@ -74,13 +79,13 @@ let package = Package(
         // --- Test Targets ---
         // Update test targets
         .testTarget(name: "OnboardingTests", dependencies: ["Onboarding"]),
-        .testTarget(name: "ReviewRequestTests", dependencies: ["ReviewManager"]), 
+        .testTarget(name: "ReviewRequestTests", dependencies: ["ReviewManager"]),
         .testTarget(name: "NotificationManagerTests", dependencies: ["NotificationManager"]),
         .testTarget(name: "UserProfileTests", dependencies: ["UserProfile"]),
         .testTarget(name: "SettingsTests", dependencies: ["Settings"]),
         .testTarget(name: "RevenueCatManagerTests", dependencies: ["RevenueCatManager"]),
         .testTarget(name: "DebugToolsTests", dependencies: ["DebugTools"]),
         // Rename UtilitiesTests to ThemeManagerTests and update dependency
-        .testTarget(name: "ThemeManagerTests", dependencies: ["ThemeManager"], path: "Tests/ThemeManagerTests"), 
+        .testTarget(name: "ThemeManagerTests", dependencies: ["ThemeManager"], path: "Tests/ThemeManagerTests"),
     ]
-) 
+)

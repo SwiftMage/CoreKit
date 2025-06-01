@@ -1,6 +1,7 @@
 import SwiftUI
-import RevenueCat
+#if canImport(UIKit)
 import UIKit
+#endif
 
 /// Manages parental gates throughout the app
 public class ParentalGateManager: ObservableObject {
@@ -25,7 +26,7 @@ public class ParentalGateManager: ObservableObject {
     private var isProcessingQueue = false
     
     // Different types of parental gates for different actions
-    enum ParentalGateType {
+    public enum ParentalGateType {
         case purchase
         case link
         case settings
@@ -261,10 +262,21 @@ public struct ParentalGateView: View {
                 }
             }
             .padding()
-            .background(
+            
+            // Adaptive background - avoid AnyShapeStyle, use conditional view composition
+            if #available(iOS 15, macOS 12, *) {
                 RoundedRectangle(cornerRadius: 20)
-                    .fill(.thinMaterial) // Use thin material background
-            )
+                    .fill(.thinMaterial)
+                    .overlay(
+                        EmptyView()
+                    )
+            } else {
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(Color.white.opacity(0.8))
+                    .overlay(
+                        EmptyView()
+                    )
+            }
             
             // Cancel button
             Button("Cancel") {
@@ -276,7 +288,19 @@ public struct ParentalGateView: View {
         }
         .padding()
         // Add a background color or material to the entire VStack for better presentation
-        .background(Color(.systemGroupedBackground))
+        .background(
+            Group {
+                if #available(macOS 12.0, iOS 15.0, *) {
+                    #if canImport(UIKit)
+                    Color(UIColor.systemGroupedBackground)
+                    #else
+                    Color.gray.opacity(0.1)
+                    #endif
+                } else {
+                    Color.white
+                }
+            }
+        )
         .cornerRadius(20)
         .shadow(radius: 5)
         .padding(20) // Add padding around the sheet content
@@ -336,4 +360,5 @@ extension ParentalGateLink where Label == Text {
     public init<S: StringProtocol>(_ title: S, destination: URL) {
         self.init(destination: destination) { Text(title) }
     }
-} 
+}
+    
