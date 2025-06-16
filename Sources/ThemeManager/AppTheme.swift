@@ -7,7 +7,8 @@ private class BundleFinder {}
 
 extension Foundation.Bundle {
     /// Returns the resource bundle associated with the current Swift module.
-    static var module: Bundle = {
+    static let module: Bundle = {
+        // Use a static let for one-time initialization which is thread-safe in Swift
         let bundleName = "CoreKit_Utilities" // Matches the target name in Package.swift potentially with _
 
         let candidates = [

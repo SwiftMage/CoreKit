@@ -25,21 +25,30 @@ public class RevenueCatManager: ObservableObject {
     // MARK: - Properties
     
     private var cancellables = Set<AnyCancellable>()
+    private let productIdentifier: String
     
     // MARK: - Offline Caching
     
-    private let subscriptionCacheKey = "PayClockPro_SubscriptionStatus"
-    private let lastUpdateKey = "PayClockPro_LastUpdate"
-    private let subscriptionExpiryKey = "PayClockPro_SubscriptionExpiry"
-    private let subscriptionPeriodKey = "PayClockPro_SubscriptionPeriod"
+    private let subscriptionCacheKey: String
+    private let lastUpdateKey: String
+    private let subscriptionExpiryKey: String
+    private let subscriptionPeriodKey: String
     
     // Default cache timeout for unknown subscription periods
     private let defaultCacheValidityDuration: TimeInterval = 24 * 60 * 60 // 24 hours
     
     // MARK: - Initialization
     
-    public init() {
-        DebugLogger.revenueCat("RevenueCatManager initialized.")
+    public init(productIdentifier: String = "default", entitlementId: String = "premium") {
+        self.productIdentifier = productIdentifier
+        
+        // Generate keys based on product identifier for isolation
+        self.subscriptionCacheKey = "\(productIdentifier)_SubscriptionStatus"
+        self.lastUpdateKey = "\(productIdentifier)_LastUpdate"
+        self.subscriptionExpiryKey = "\(productIdentifier)_SubscriptionExpiry"
+        self.subscriptionPeriodKey = "\(productIdentifier)_SubscriptionPeriod"
+        
+        DebugLogger.revenueCat("RevenueCatManager initialized for product: \(productIdentifier)")
         
         // Load cached subscription status on initialization
         loadCachedSubscriptionStatus()
@@ -311,7 +320,7 @@ public class RevenueCatManager: ObservableObject {
  
  struct PremiumView: View {
      // Get the manager instance (e.g., via @EnvironmentObject or @StateObject)
-     @StateObject private var revenueCatManager = RevenueCatManager()
+     @StateObject private var revenueCatManager = RevenueCatManager(productIdentifier: "MyApp")
      @State private var showErrorAlert = false
      @State private var alertMessage = ""
  
@@ -395,7 +404,7 @@ public class RevenueCatManager: ObservableObject {
  import CoreKit // Or import RevenueCatManager
  
  @main
- struct PowerWordsApp: App {
+ struct MyApp: App {
      init() {
          // Configure RevenueCat ONCE on app launch
          RevenueCatManager.configure(apiKey: "YOUR_REVENUECAT_PUBLIC_API_KEY")
