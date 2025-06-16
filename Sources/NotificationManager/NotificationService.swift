@@ -1,5 +1,11 @@
 import Foundation
 import UserNotifications
+#if canImport(UIKit)
+import UIKit
+#endif
+#if canImport(CloudKit)
+import CloudKit
+#endif
 import DebugTools
 // If using Firebase:
 // import FirebaseMessaging

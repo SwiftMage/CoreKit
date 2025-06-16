@@ -10,16 +10,7 @@ let package = Package(
     products: [
         .library(
             name: "CoreKit",
-            targets: [
-                "Onboarding",
-                "ReviewManager",
-                "NotificationManager",
-                "UserProfile",
-                "Settings",
-                "DebugTools",
-                "ThemeManager",
-                "ParentalGate"
-            ]
+            targets: ["CoreKit"]
         ),
         .library(
             name: "CoreKitRevenue",
@@ -31,6 +22,21 @@ let package = Package(
         .package(url: "https://github.com/RevenueCat/purchases-ios.git", from: "5.21.2")
     ],
     targets: [
+        .target(
+            name: "CoreKit",
+            dependencies: [
+                "Onboarding",
+                "ReviewManager",
+                "NotificationManager",
+                "UserProfile",
+                "Settings",
+                "RevenueCatManager",
+                "DebugTools",
+                "ThemeManager",
+                "ParentalGate"
+            ],
+            path: "Sources/CoreKit"
+        ),
         // Update dependencies from "Utilities" to "ThemeManager"
         .target(name: "Onboarding", dependencies: ["ThemeManager", "DebugTools"], path: "Sources/Onboarding"),
         .target(name: "ReviewManager", dependencies: ["ThemeManager", "DebugTools"], path: "Sources/ReviewManager"),

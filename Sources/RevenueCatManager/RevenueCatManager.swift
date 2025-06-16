@@ -19,14 +19,31 @@ public class RevenueCatManager: ObservableObject {
     /// Loading state for UI feedback.
     @Published public private(set) var isLoading: Bool = false
     
+    /// Indicates if we're currently offline and using cached subscription status
+    @Published public private(set) var isUsingCachedStatus: Bool = false
+    
     // MARK: - Properties
     
     private var cancellables = Set<AnyCancellable>()
+    
+    // MARK: - Offline Caching
+    
+    private let subscriptionCacheKey = "PayClockPro_SubscriptionStatus"
+    private let lastUpdateKey = "PayClockPro_LastUpdate"
+    private let subscriptionExpiryKey = "PayClockPro_SubscriptionExpiry"
+    private let subscriptionPeriodKey = "PayClockPro_SubscriptionPeriod"
+    
+    // Default cache timeout for unknown subscription periods
+    private let defaultCacheValidityDuration: TimeInterval = 24 * 60 * 60 // 24 hours
     
     // MARK: - Initialization
     
     public init() {
         DebugLogger.revenueCat("RevenueCatManager initialized.")
+        
+        // Load cached subscription status on initialization
+        loadCachedSubscriptionStatus()
+        
         // TODO: Add listener for Purchases.shared.customerInfoStream
         // TODO: Fetch offerings on init?
     }
@@ -76,6 +93,11 @@ public class RevenueCatManager: ObservableObject {
 
             DebugLogger.revenueCat("Purchase successful for package: \(package.identifier). Customer Info: \(customerInfo)")
             updateSubscriptionStatus(customerInfo: customerInfo)
+            
+            // Cache the successful purchase result
+            cacheSubscriptionStatus(isActive: isSubscriptionActive)
+            isUsingCachedStatus = false
+            
             return customerInfo
         } catch {
             if let rcError = error as? RevenueCat.ErrorCode, rcError == .purchaseCancelledError {
@@ -98,6 +120,11 @@ public class RevenueCatManager: ObservableObject {
             let customerInfo = try await Purchases.shared.restorePurchases()
             DebugLogger.revenueCat("Purchases restored successfully. Customer Info: \(customerInfo)")
             updateSubscriptionStatus(customerInfo: customerInfo)
+            
+            // Cache the successful restore result
+            cacheSubscriptionStatus(isActive: isSubscriptionActive)
+            isUsingCachedStatus = false
+            
             return customerInfo
         } catch {
             DebugLogger.revenueCat("Failed to restore purchases: \(error.localizedDescription)", level: .error)
@@ -110,13 +137,30 @@ public class RevenueCatManager: ObservableObject {
     public func checkSubscriptionStatus() async {
         DebugLogger.revenueCat("Checking subscription status...")
         isLoading = true
+        
         do {
             let customerInfo = try await Purchases.shared.customerInfo()
             updateSubscriptionStatus(customerInfo: customerInfo)
+            isUsingCachedStatus = false
+            
+            // Cache the successful result
+            cacheSubscriptionStatus(isActive: isSubscriptionActive)
+            
         } catch {
-             DebugLogger.revenueCat("Failed to get customer info: \(error.localizedDescription)", level: .error)
+            DebugLogger.revenueCat("Failed to get customer info: \(error.localizedDescription)", level: .error)
+            
+            // Fall back to cached status if available
+            if isCacheValid() {
+                DebugLogger.revenueCat("Using cached subscription status due to network error", level: .info)
+                isUsingCachedStatus = true
+            } else {
+                DebugLogger.revenueCat("No valid cache available, defaulting to inactive", level: .warning)
+                isSubscriptionActive = false
+                isUsingCachedStatus = false
+            }
         }
-         isLoading = false
+        
+        isLoading = false
     }
     
     // MARK: - Private Helpers
@@ -127,7 +171,120 @@ public class RevenueCatManager: ObservableObject {
         let entitlementID = "premium" 
         let isActive = customerInfo.entitlements.all[entitlementID]?.isActive == true 
         self.isSubscriptionActive = isActive
+        
+        // Extract subscription details for intelligent caching
+        if let entitlement = customerInfo.entitlements.all[entitlementID],
+           entitlement.isActive {
+            
+            let expirationDate = entitlement.expirationDate
+            let periodType = entitlement.periodType
+            
+            DebugLogger.revenueCat("Active subscription - Period: \(periodType.rawValue), Expires: \(expirationDate?.description ?? "Never")")
+            
+            // Store subscription details for cache validity calculation
+            if let expirationDate = expirationDate {
+                UserDefaults.standard.set(expirationDate.timeIntervalSince1970, forKey: subscriptionExpiryKey)
+            }
+            UserDefaults.standard.set(periodType.rawValue, forKey: subscriptionPeriodKey)
+        } else {
+            // Clear subscription details if not active
+            UserDefaults.standard.removeObject(forKey: subscriptionExpiryKey)
+            UserDefaults.standard.removeObject(forKey: subscriptionPeriodKey)
+        }
+        
         DebugLogger.revenueCat("Subscription status updated: isActive = \(isActive) for entitlement '\(entitlementID)'")
+    }
+    
+    // MARK: - Offline Caching Methods
+    
+    /// Loads cached subscription status from UserDefaults
+    private func loadCachedSubscriptionStatus() {
+        let cachedStatus = UserDefaults.standard.bool(forKey: subscriptionCacheKey)
+        let lastUpdate = UserDefaults.standard.double(forKey: lastUpdateKey)
+        
+        if isCacheValid(lastUpdate: lastUpdate) {
+            isSubscriptionActive = cachedStatus
+            isUsingCachedStatus = true
+            DebugLogger.revenueCat("Loaded cached subscription status: \(cachedStatus)")
+        } else {
+            DebugLogger.revenueCat("Cached subscription status expired or not found")
+            isUsingCachedStatus = false
+        }
+    }
+    
+    /// Caches the current subscription status to UserDefaults
+    private func cacheSubscriptionStatus(isActive: Bool) {
+        UserDefaults.standard.set(isActive, forKey: subscriptionCacheKey)
+        UserDefaults.standard.set(Date().timeIntervalSince1970, forKey: lastUpdateKey)
+        UserDefaults.standard.synchronize()
+        
+        DebugLogger.revenueCat("Cached subscription status: \(isActive)")
+    }
+    
+    /// Checks if the cached subscription status is still valid based on subscription period and expiry
+    private func isCacheValid(lastUpdate: Double? = nil) -> Bool {
+        let updateTime = lastUpdate ?? UserDefaults.standard.double(forKey: lastUpdateKey)
+        
+        guard updateTime > 0 else {
+            return false // No cache exists
+        }
+        
+        let currentTime = Date().timeIntervalSince1970
+        let timeSinceUpdate = currentTime - updateTime
+        
+        // Check if we have actual subscription expiry date
+        let subscriptionExpiry = UserDefaults.standard.double(forKey: subscriptionExpiryKey)
+        if subscriptionExpiry > 0 {
+            let timeUntilExpiry = subscriptionExpiry - currentTime
+            
+            // Cache is valid if:
+            // 1. Subscription hasn't expired yet
+            // 2. We're within a reasonable offline grace period based on subscription type
+            let gracePeriod = getOfflineGracePeriod()
+            let isValid = timeUntilExpiry > -gracePeriod
+            
+            DebugLogger.revenueCat("Cache validity check - Time until expiry: \(Int(timeUntilExpiry))s, Grace period: \(Int(gracePeriod))s, Valid: \(isValid)")
+            return isValid
+        } else {
+            // Fallback to time-based validation if no expiry date available
+            let isValid = timeSinceUpdate < defaultCacheValidityDuration
+            DebugLogger.revenueCat("Cache validity check (fallback) - Age: \(Int(timeSinceUpdate))s, Valid: \(isValid)")
+            return isValid
+        }
+    }
+    
+    /// Gets the appropriate offline grace period based on subscription type
+    private func getOfflineGracePeriod() -> TimeInterval {
+        let periodTypeRaw = UserDefaults.standard.string(forKey: subscriptionPeriodKey) ?? ""
+        
+        // Map RevenueCat period types to reasonable offline grace periods
+        switch periodTypeRaw {
+        case "P1W": // Weekly
+            return 2 * 24 * 60 * 60 // 2 days grace
+        case "P1M": // Monthly  
+            return 7 * 24 * 60 * 60 // 1 week grace
+        case "P1Y": // Yearly
+            return 30 * 24 * 60 * 60 // 30 days grace
+        case "P3M": // Quarterly
+            return 14 * 24 * 60 * 60 // 2 weeks grace
+        case "P6M": // Semi-annual
+            return 21 * 24 * 60 * 60 // 3 weeks grace
+        default:
+            DebugLogger.revenueCat("Unknown subscription period '\(periodTypeRaw)', using default grace period", level: .warning)
+            return defaultCacheValidityDuration // 24 hours default
+        }
+    }
+    
+    /// Clears cached subscription data (useful for testing or logout)
+    public func clearCache() {
+        UserDefaults.standard.removeObject(forKey: subscriptionCacheKey)
+        UserDefaults.standard.removeObject(forKey: lastUpdateKey)
+        UserDefaults.standard.removeObject(forKey: subscriptionExpiryKey)
+        UserDefaults.standard.removeObject(forKey: subscriptionPeriodKey)
+        UserDefaults.standard.synchronize()
+        
+        isUsingCachedStatus = false
+        DebugLogger.revenueCat("Cleared subscription cache")
     }
     
     // TODO: Set up listener for customer info updates
