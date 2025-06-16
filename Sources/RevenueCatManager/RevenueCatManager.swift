@@ -123,11 +123,12 @@ public class RevenueCatManager: ObservableObject {
     
     /// Updates the `isSubscriptionActive` property based on CustomerInfo.
     /// Replace "premium" with your actual entitlement identifier.
+    /// Works for both subscriptions and lifetime purchases.
     private func updateSubscriptionStatus(customerInfo: CustomerInfo) {
         let entitlementID = "premium" 
         let isActive = customerInfo.entitlements.all[entitlementID]?.isActive == true 
         self.isSubscriptionActive = isActive
-        DebugLogger.revenueCat("Subscription status updated: isActive = \(isActive) for entitlement '\(entitlementID)'")
+        DebugLogger.revenueCat("Premium status updated: isActive = \(isActive) for entitlement '\(entitlementID)'")
     }
     
     // TODO: Set up listener for customer info updates
